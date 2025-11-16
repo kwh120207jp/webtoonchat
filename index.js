@@ -26,7 +26,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
             text-shadow: 2px 2px 4px #000000;
           }
         </style>
-        <text x="50%" y="78%" dominant-baseline="middle" text-anchor="middle" class="title">
+        <text x="50%" y="100" dominant-baseline="middle" text-anchor="middle" class="title">
           ${text}
         </text>
       </svg>
