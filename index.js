@@ -16,7 +16,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
 
     // 2. 텍스트 오버레이를 위한 SVG 생성
     const svgText = `
-      <svg width="800" height="100">
+      <svg width="500" height="400">
         <style>
           .title { 
             fill: #FFFFFF;
