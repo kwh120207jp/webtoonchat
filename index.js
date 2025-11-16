@@ -16,17 +16,17 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
 
     // 2. 텍스트 오버레이를 위한 SVG 생성
     const svgText = `
-      <svg width="500" height="400">
+      <svg width="1730" height="220">
         <style>
           .title { 
             fill: #FFFFFF;
-            font-size: 120px; 
+            font-size: 42px; 
             font-weight: bold; 
             font-family: 'Noto Sans CJK KR';
             text-shadow: 2px 2px 4px #000000;
           }
         </style>
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="title">
+        <text x="50%" y="78%" dominant-baseline="middle" text-anchor="middle" class="title">
           ${text}
         </text>
       </svg>
