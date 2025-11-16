@@ -22,7 +22,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
             fill: #FFFFFF;
             font-size: 70px; 
             font-weight: bold; 
-            font-family: 'Arial';
+            font-family: 'Noto Sans CJK KR';
             text-shadow: 2px 2px 4px #000000;
           }
         </style>
