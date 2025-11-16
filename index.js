@@ -12,7 +12,7 @@ const BOX_HEIGHT = 220; // 대화창 세로 크기
 
 // 대화창의 '왼쪽 상단' 절대 좌표
 // X: (1920 - 1830) / 2 = 45
-const BOX_X = 45;
+const BOX_X = 50;
 // Y: 1080 (화면 바닥) - 100 (아래 여백) - 220 (대화창 높이) = 760
 const BOX_Y = 760; 
 // ------------------------------------
@@ -31,7 +31,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
         <style>
           .title { 
             fill: #FFFFFF;
-            font-size: 42px; 
+            font-size: 52px; 
             font-weight: bold; 
             font-family: 'Noto Sans CJK KR';
             text-shadow: 2px 2px 4px #000000;
