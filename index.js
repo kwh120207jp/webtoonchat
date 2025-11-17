@@ -7,14 +7,12 @@ const storage = new Storage();
 const bucketName = 'my-dynamic-image-source';
 
 // --- 1920x1080 기준 대화창 위치 및 크기 ---
-const BOX_WIDTH = 1830; // 대화창 가로 크기
-const BOX_HEIGHT = 220; // 대화창 세로 크기
+const BOX_WIDTH = 1261; // 대화창 가로 크기
+const BOX_HEIGHT = 213; // 대화창 세로 크기
 
 // 대화창의 '왼쪽 상단' 절대 좌표
-// X: (1920 - 1830) / 2 = 45
-const BOX_X = 100;
-// Y: 1080 (화면 바닥) - 100 (아래 여백) - 220 (대화창 높이) = 760
-const BOX_Y = 700; 
+const BOX_X = 285;
+const BOX_Y = 767; 
 // ------------------------------------
 
 app.get('/img/:imageId/text/:text', async (req, res) => {
@@ -27,7 +25,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
 
     // 2. URL 경로에 포함된 \n을 기준으로 줄바꿈 처리
     const lines = text.split('\n');
-    const lineHeight = 1.2; // em 단위
+    const lineHeight = 1.5; // em 단위
     // 전체 텍스트 블록을 세로로 중앙 정렬하기 위해 첫 줄의 y 오프셋 계산
     const firstLineYOffset = -((lines.length - 1) / 2) * lineHeight;
     
@@ -39,15 +37,10 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
     const svgText = `
       <svg width="${BOX_WIDTH}" height="${BOX_HEIGHT}">
         <style>
-          @font-face {
-            font-family: 'SCDream3';
-            src: url('SCDream3.otf') format('opentype');
-          }
           .title { 
-            fill: #FFFFFF;
-            font-size: 52px; 
-            font-family: 'SCDream3';
-            text-shadow: 2px 2px 4px #000000;
+            fill: #ffffff;
+            font-size: 42px; 
+            font-family: "sans-serif";
           }
         </style>
         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="title">
@@ -62,8 +55,8 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
       .composite([
         {
           input: svgBuffer,
-          top: BOX_Y,  // 760
-          left: BOX_X, // 45
+          top: BOX_Y,
+          left: BOX_X,
         },
       ])
       .toFormat('jpeg')
