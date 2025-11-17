@@ -29,11 +29,15 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
     const svgText = `
       <svg width="${BOX_WIDTH}" height="${BOX_HEIGHT}">
         <style>
+          @font-face {
+            font-family: 'SCDream3';
+            src: url('SCDream3.otf') format('opentype');
+          }
           .title { 
             fill: #FFFFFF;
             font-size: 52px; 
             font-weight: bold; 
-            font-family: 'Noto Sans CJK KR';
+            font-family: 'SCDream3';
             text-shadow: 2px 2px 4px #000000;
           }
         </style>
