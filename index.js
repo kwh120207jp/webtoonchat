@@ -25,7 +25,17 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
     const file = storage.bucket(bucketName).file(`${imageId}.jpg`);
     const [imageBuffer] = await file.download();
 
-    // 2. 텍스트 오버레이를 위한 SVG 생성 (전체 대화창 크기)
+    // 2. URL 경로에 포함된 \\n을 기준으로 줄바꿈 처리
+    const lines = text.split('\\n');
+    const lineHeight = 1.2; // em 단위
+    // 전체 텍스트 블록을 세로로 중앙 정렬하기 위해 첫 줄의 y 오프셋 계산
+    const firstLineYOffset = -((lines.length - 1) / 2) * lineHeight;
+    
+    const textSpans = lines.map((line, index) => 
+        `<tspan x="120" dy="${index === 0 ? firstLineYOffset : lineHeight}em">${line}</tspan>`
+    ).join('');
+
+    // 3. 텍스트 오버레이를 위한 SVG 생성 (전체 대화창 크기)
     const svgText = `
       <svg width="${BOX_WIDTH}" height="${BOX_HEIGHT}">
         <style>
@@ -42,7 +52,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
           }
         </style>
         <text x="120" y="50%" dominant-baseline="middle" text-anchor="start" class="title">
-          ${text}
+          ${textSpans}
         </text>
       </svg>
     `;
