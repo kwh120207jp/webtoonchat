@@ -39,7 +39,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
         <style>
           .title { 
             fill: #ffffff;
-            font-size: 42px; 
+            font-size: 48px; 
             font-family: "sans-serif";
           }
         </style>
