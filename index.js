@@ -8,7 +8,7 @@ const bucketName = 'my-dynamic-image-source';
 
 // --- 1920x1080 기준 대화창 위치 및 크기 ---
 const BOX_WIDTH = 1261; // 대화창 가로 크기
-const BOX_HEIGHT = 213; // 대화창 세로 크기
+const BOX_HEIGHT = 220; // 대화창 세로 크기
 
 // 대화창의 '왼쪽 상단' 절대 좌표
 const BOX_X = 285;
