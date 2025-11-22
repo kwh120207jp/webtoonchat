@@ -3,81 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>웹툰 짤 생성기 - Admin</title>
+    <title>Cycorld - Webtoon Maker</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="cyworld-bg">
+        <div class="cyworld-container">
+            <!-- 도트 배경 패턴 라인 -->
+            <div class="dot-line-outer">
+                <div class="content-wrapper">
+                    
+                    <!-- 왼쪽 컬럼 (프로필) -->
+                    <aside class="left-column">
+                        <div class="profile-box">
+                            <div class="today-count">TODAY <span class="red">28</span> | TOTAL 12345</div>
+                            <div class="profile-img-area">
+                                <div class="profile-placeholder">
+                                    (◕‿◕✿)
+                                </div>
+                            </div>
+                            <div class="profile-text">
+                                마음만은..<br>
+                                웹툰작가..★<br>
+                                <br>
+                                <span class="emotion">Today is.. 짤 생성 중</span>
+                            </div>
+                            <div class="history-dropdown">
+                                <select>
+                                    <option>파도타기...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </aside>
 
-    <div class="container">
-        <!-- 헤더 영역 -->
-        <header class="blog-header">
-            <h1>Webtoon Maker Blog</h1>
-            <p>당신의 대사를 웹툰으로 만들어보세요.</p>
-        </header>
-
-        <!-- 1. 로그인 섹션 -->
-        <section id="login-section" class="card">
-            <h2>관리자 로그인</h2>
-            <form id="login-form">
-                <div class="input-group">
-                    <label for="userid">아이디</label>
-                    <input type="text" id="userid" placeholder="admin" required>
-                </div>
-                <div class="input-group">
-                    <label for="userpw">비밀번호</label>
-                    <input type="password" id="userpw" placeholder="1234" required>
-                </div>
-                <button type="submit" class="btn-primary">로그인</button>
-            </form>
-        </section>
-
-        <!-- 2. 글쓰기(이미지 생성) 섹션 (초기엔 숨김) -->
-        <section id="write-section" class="card hidden">
-            <div class="section-header">
-                <h2>새 글 작성</h2>
-                <button id="logout-btn" class="btn-text">로그아웃</button>
-            </div>
-            
-            <div class="editor-layout">
-                <!-- 입력 폼 -->
-                <div class="form-area">
-                    <div class="input-group">
-                        <label for="image-select">장면 선택 (Image ID)</label>
-                        <!-- imageConfig.json에 등록된 ID들을 여기에 적어줍니다 -->
-                        <select id="image-select">
-                            <option value="example-scene-01">장면 1 (기본)</option>
-                            <option value="ending-cut">엔딩 컷</option>
-                            <!-- 필요하면 option을 더 추가하세요 -->
-                        </select>
-                    </div>
-
-                    <div class="input-group">
-                        <label for="dialogue">대사 입력</label>
-                        <textarea id="dialogue" rows="5" placeholder="여기에 대사를 입력하세요... (줄바꿈 가능)"></textarea>
-                    </div>
-
-                    <button id="generate-btn" class="btn-primary">이미지 생성하기</button>
-                </div>
-
-                <!-- 결과 미리보기 (블로그 포스트 스타일) -->
-                <div class="preview-area">
-                    <div class="blog-post">
-                        <div class="post-meta">2025년 11월 22일 &middot; 작성자: 관리자</div>
-                        <h3 class="post-title">생성된 웹툰 짤</h3>
+                    <!-- 오른쪽 컬럼 (콘텐츠) -->
+                    <main class="right-column">
+                        <div class="title-bar">
+                            <h1 class="home-title">★ Webtoon Maker Minihompy ★</h1>
+                            <div class="url-link">http://www.cyworld.com/webtoon</div>
+                        </div>
                         
-                        <!-- 이미지가 로딩되면 여기에 표시됩니다 -->
-                        <div class="image-container">
-                            <img id="result-image" src="" alt="생성된 이미지가 여기에 나타납니다" style="display:none;">
-                            <div id="placeholder-text">좌측에서 내용을 입력하고 버튼을 눌러주세요.</div>
-                        </div>
+                        <div class="main-content-box">
+                            <!-- 로그인 섹션 -->
+                            <div id="login-section" class="diary-section">
+                                <div class="date-header">Login</div>
+                                <form id="login-form" class="cy-form">
+                                    <input type="text" id="userid" placeholder="아이디" required>
+                                    <input type="password" id="userpw" placeholder="비밀번호" required>
+                                    <button type="submit" class="cy-btn">로그인</button>
+                                </form>
+                            </div>
 
-                        <div class="post-content">
-                            <p>위 이미지는 실시간으로 생성되었습니다. 우클릭하여 저장하세요.</p>
+                            <!-- 글쓰기 및 피드 섹션 -->
+                            <div id="write-section" class="hidden">
+                                <!-- 탭 메뉴 -->
+                                <div class="menu-tabs">
+                                    <span class="tab active">Home</span>
+                                    <span class="tab">사진첩</span>
+                                    <span class="tab">다이어리</span>
+                                    <button id="logout-btn" class="logout-text">로그아웃</button>
+                                </div>
+
+                                <!-- 입력 폼 -->
+                                <div class="post-write-area">
+                                    <div class="input-row">
+                                        <label>장면선택</label>
+                                        <!-- imageConfig.json에 있는 ID들을 넣으세요 -->
+                                        <select id="image-select" class="cy-input">
+                                            <option value="example-scene-01">장면 1 (기본)</option>
+                                            <option value="ending-cut">엔딩 컷</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-row">
+                                        <label>대사입력</label>
+                                        <textarea id="dialogue" class="cy-input" rows="3" placeholder="대사를 입력하세요..."></textarea>
+                                    </div>
+                                    <div class="btn-row">
+                                        <button id="generate-btn" class="cy-btn-primary">등록</button>
+                                    </div>
+                                </div>
+
+                                <hr class="cy-divider">
+
+                                <!-- 게시글 목록 (피드) -->
+                                <div id="feed-area" class="feed-list">
+                                    <!-- JS로 게시글이 여기에 추가됩니다 -->
+                                    <div class="loading-msg">게시글을 불러오는 중...</div>
+                                </div>
+                            </div>
                         </div>
+                    </main>
+                    
+                    <!-- 우측 탭 (장식용) -->
+                    <div class="side-tabs">
+                        <div class="side-tab active">홈</div>
+                        <div class="side-tab">프로필</div>
+                        <div class="side-tab">다이어리</div>
+                        <div class="side-tab">사진첩</div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
     </div>
 
     <script src="script.js"></script>
