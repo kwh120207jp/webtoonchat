@@ -68,7 +68,6 @@
                                 <div class="post-write-area">
                                     <div class="input-row">
                                         <label>장면선택</label>
-                                        <!-- imageConfig.json에 있는 ID들을 넣으세요 -->
                                         <select id="image-select" class="cy-input">
                                             <option value="example-scene-01">장면 1 (기본)</option>
                                             <option value="ending-cut">엔딩 컷</option>
@@ -79,7 +78,15 @@
                                         <textarea id="dialogue" class="cy-input" rows="3" placeholder="대사를 입력하세요..."></textarea>
                                     </div>
                                     <div class="btn-row">
+                                        <!-- 버튼 분리: 미리보기 vs 등록 -->
+                                        <button id="preview-btn" class="cy-btn">미리보기</button>
                                         <button id="generate-btn" class="cy-btn-primary">등록</button>
+                                    </div>
+                                    
+                                    <!-- 미리보기 영역 (추가됨) -->
+                                    <div id="preview-area" class="hidden" style="margin-top: 15px; text-align: center;">
+                                        <div class="date-header" style="text-align:left;">Preview</div>
+                                        <img id="preview-img" src="" style="max-width: 100%; border:1px solid #ccc;">
                                     </div>
                                 </div>
 
@@ -87,7 +94,6 @@
 
                                 <!-- 게시글 목록 (피드) -->
                                 <div id="feed-area" class="feed-list">
-                                    <!-- JS로 게시글이 여기에 추가됩니다 -->
                                     <div class="loading-msg">게시글을 불러오는 중...</div>
                                 </div>
                             </div>
