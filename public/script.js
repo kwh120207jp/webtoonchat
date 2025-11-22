@@ -1,11 +1,13 @@
-// Firebase 라이브러리 가져오기
+// Firebase 라이브러리 가져오기 (건드리지 마세요)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// -----------------------------------------------------------
-// [중요] 아래 firebaseConfig 안에 본인의 키를 붙여넣으세요!
-// -----------------------------------------------------------
+// ==========================================================================
+// [중요] 아래 firebaseConfig 내용을 본인의 키 값으로 덮어씌우세요!
+// 파이어베이스 콘솔 -> 프로젝트 설정 -> 내 앱 -> 'Config' 복사
+// ==========================================================================
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyB5YDvSFoy3KtvaAVo-ZHv7L3lWfzctNtY",
   authDomain: "webtoonchat.firebaseapp.com",
@@ -15,12 +17,18 @@ const firebaseConfig = {
   appId: "1:992694632208:web:74893f699ea23e9c78af95",
   measurementId: "G-PZ42VK6LN5"
 };
-// -----------------------------------------------------------
+// ==========================================================================
 
 // Firebase 초기화
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+let app, auth, db;
+
+try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+} catch (e) {
+    console.error("Firebase 초기화 실패! firebaseConfig를 확인하세요.", e);
+}
 
 // DOM 요소 가져오기
 const loginSection = document.getElementById('login-section');
@@ -36,19 +44,21 @@ let currentUser = null;
 
 // 1. 인증 처리 (익명 로그인)
 async function initAuth() {
+    if (!auth) return;
     try {
         await signInAnonymously(auth);
     } catch (error) {
         console.error("Auth Failed:", error);
-        feedArea.innerHTML = '<div class="loading-msg">인증 오류가 발생했습니다.<br>F12 콘솔을 확인해주세요.</div>';
+        feedArea.innerHTML = '<div class="loading-msg">인증 오류가 발생했습니다.<br>firebaseConfig를 확인해주세요.</div>';
     }
 }
 
-// 2. 실시간 게시글 리스너
+// 2. 실시간 게시글 리스너 (DB가 바뀌면 화면도 즉시 바뀜)
 function subscribePosts() {
-    // 'posts' 컬렉션을 바라봅니다.
+    if (!db) return;
+    
     const postsRef = collection(db, 'posts');
-    // 날짜(date)가 아니라 id(timestamp) 기준으로 내림차순 정렬
+    // id(timestamp) 역순으로 정렬하여 최신글이 위에 오도록 함
     const q = query(postsRef, orderBy("id", "desc"));
 
     onSnapshot(q, (snapshot) => {
@@ -65,10 +75,13 @@ function subscribePosts() {
             postEl.className = 'feed-post';
             const formattedText = post.text ? post.text.replace(/\n/g, '<br>') : '';
             
+            // 작성일자가 없으면 오늘 날짜로 표시
+            const displayDate = post.date || new Date().toLocaleDateString();
+            
             postEl.innerHTML = `
                 <div class="feed-header">
-                    <span class="no">no.${doc.id.substr(0, 4)}</span>
-                    <span>${post.author || '익명'} | ${post.date}</span>
+                    <span class="no">no.${doc.id.toString().substr(-4)}</span>
+                    <span>${post.author || '익명'} | ${displayDate}</span>
                 </div>
                 <img src="${post.imageUrl}" class="feed-img" alt="게시글 이미지" onerror="this.style.display='none'">
                 <div class="feed-text">
@@ -79,9 +92,8 @@ function subscribePosts() {
         });
     }, (error) => {
         console.error("Data Fetch Error:", error);
-        // 권한 오류가 가장 흔함 (Firestore 규칙 확인 필요)
         if (error.code === 'permission-denied') {
-             feedArea.innerHTML = '<div class="loading-msg">데이터 권한이 없습니다.<br>Firestore 규칙을 "Test Mode"로 설정했는지 확인하세요.</div>';
+             feedArea.innerHTML = '<div class="loading-msg">권한이 없습니다.<br>Firestore 규칙을 Test Mode로 설정했는지 확인하세요.</div>';
         } else {
              feedArea.innerHTML = '<div class="loading-msg">데이터를 불러오지 못했습니다.</div>';
         }
@@ -92,17 +104,19 @@ function subscribePosts() {
 initAuth();
 
 // 인증 상태 변경 감지
-onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-    if (user) {
-        console.log("Logged in as:", user.uid);
-        subscribePosts(); 
-    }
-});
+if (auth) {
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            console.log("Logged in as:", user.uid);
+            subscribePosts(); 
+        }
+    });
+}
 
 // --- 이벤트 리스너들 ---
 
-// 관리자 로그인 UI 처리
+// 1. 관리자 로그인 (UI 처리만)
 loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const userid = document.getElementById('userid').value;
@@ -117,7 +131,7 @@ loginForm.addEventListener('submit', (e) => {
     }
 });
 
-// 로그아웃
+// 2. 로그아웃
 document.getElementById('logout-btn').addEventListener('click', () => {
     loginSection.classList.remove('hidden');
     writeSection.classList.add('hidden');
@@ -126,7 +140,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
     previewArea.classList.add('hidden');
 });
 
-// 미리보기
+// 3. 미리보기
 previewBtn.addEventListener('click', () => {
     const imageUrl = document.getElementById('image-url').value;
     if (!imageUrl) {
@@ -137,7 +151,7 @@ previewBtn.addEventListener('click', () => {
     previewArea.classList.remove('hidden');
 });
 
-// 등록 (Firestore 저장)
+// 4. 등록 (Firestore 저장)
 generateBtn.addEventListener('click', async () => {
     if (!currentUser) {
         alert('서버 연결 중입니다. 잠시 후 다시 시도해주세요.');
@@ -168,6 +182,7 @@ generateBtn.addEventListener('click', async () => {
 
         alert('게시글이 등록되었습니다!');
         
+        // 초기화
         document.getElementById('post-text').value = '';
         document.getElementById('image-url').value = '';
         previewArea.classList.add('hidden');
