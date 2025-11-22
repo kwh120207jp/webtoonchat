@@ -2,7 +2,8 @@ const express = require('express');
 const sharp = require('sharp');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
-const crypto = require('crypto'); // 랜덤 파일명 생성을 위해
+const crypto = require('crypto');
+const multer = require('multer'); // [추가] 파일 업로드를 위한 패키지
 
 // --- [설정] 위치 좌표 설정 파일 불러오기 ---
 let imageConfig = {};
@@ -16,13 +17,18 @@ try {
 const app = express();
 const storage = new Storage();
 const bucketName = 'my-dynamic-image-source'; 
-const DATA_FILE = 'posts.json'; // 게시글 목록 관리용
+const DATA_FILE = 'posts.json';
+
+// [추가] Multer 설정 (메모리에 임시 저장 후 GCS로 넘김)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB 제한
+});
 
 // 미들웨어 설정
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 기본 대화창 설정
 const DEFAULT_BOX = { width: 1261, height: 220, x: 285, y: 767 };
 
 // --- [Helper] 게시글 목록 불러오기/저장하기 ---
@@ -45,23 +51,19 @@ async function savePosts(posts) {
 }
 
 // -------------------------------------------------------
-// [요청하신 부분 복구] 1. 단순 생성 및 미리보기용 (저장 X)
-// 이 경로는 이미지를 생성해서 브라우저에 보여주기만 합니다.
+// [요청하신 부분 유지] 1. 단순 생성 및 미리보기용 (건드리지 않음)
 // -------------------------------------------------------
 app.get('/img/:imageId/text/:text', async (req, res) => {
   try {
     const { imageId, text } = req.params;
 
-    // [위치 계산 로직]
     const config = imageConfig[imageId] 
       ? { ...DEFAULT_BOX, ...imageConfig[imageId] } 
       : DEFAULT_BOX;
 
-    // Storage에서 원본 이미지 파일 불러오기
     const file = storage.bucket(bucketName).file(`${imageId}.jpg`);
     const [imageBuffer] = await file.download();
 
-    // 텍스트 줄바꿈 처리
     const lines = text.split('\n');
     const lineHeight = 1.5; 
     const firstLineYOffset = -((lines.length - 1) / 2) * lineHeight;
@@ -70,7 +72,6 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
         `<tspan x="50%" dy="${index === 0 ? firstLineYOffset : lineHeight}em">${line}</tspan>`
     ).join('');
 
-    // SVG 생성
     const svgText = `
       <svg width="${config.width}" height="${config.height}">
         <style>
@@ -86,13 +87,11 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
       </svg>
     `;
     
-    // 합성
     const outputBuffer = await sharp(imageBuffer)
       .composite([{ input: Buffer.from(svgText), top: config.y, left: config.x }])
       .toFormat('jpeg')
       .toBuffer();
 
-    // 결과 전송 (저장하지 않음)
     res.set('Content-Type', 'image/jpeg');
     res.set('Cache-Control', 'public, max-age=3600');
     res.send(outputBuffer);
@@ -112,43 +111,35 @@ app.get('/api/posts', async (req, res) => {
 });
 
 // -------------------------------------------------------
-// [블로그 기능] 3. 게시글 저장 API (이미지 생성 + GCS 저장)
-// "등록" 버튼을 눌렀을 때만 실행됩니다.
+// [수정됨] 3. 게시글 저장 API (파일 업로드 방식)
+// 이제 서버에서 합성을 하지 않고, 클라이언트가 보낸 파일을 그대로 저장합니다.
 // -------------------------------------------------------
-app.post('/api/posts', async (req, res) => {
+app.post('/api/posts', upload.single('imageFile'), async (req, res) => {
   try {
-    const { imageId, text, author } = req.body;
+    // 파일이 없으면 에러 처리
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: '이미지 파일이 필요합니다.' });
+    }
 
-    // 이미지 생성 로직 (위와 동일하지만, 결과를 버킷에 저장함)
-    const config = imageConfig[imageId] ? { ...DEFAULT_BOX, ...imageConfig[imageId] } : DEFAULT_BOX;
-    const originalFile = storage.bucket(bucketName).file(`${imageId}.jpg`);
-    const [imageBuffer] = await originalFile.download();
+    const { text, author } = req.body;
 
-    const lines = text.split('\n');
-    const lineHeight = 1.5;
-    const firstLineYOffset = -((lines.length - 1) / 2) * lineHeight;
-    const textSpans = lines.map((line, index) => `<tspan x="50%" dy="${index === 0 ? firstLineYOffset : lineHeight}em">${line}</tspan>`).join('');
-
-    const svgText = `<svg width="${config.width}" height="${config.height}"><style>.title { fill: #ffffff; font-size: 48px; font-family: "sans-serif"; }</style><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="title">${textSpans}</text></svg>`;
-    
-    const outputBuffer = await sharp(imageBuffer)
-      .composite([{ input: Buffer.from(svgText), top: config.y, left: config.x }])
-      .toFormat('jpeg')
-      .toBuffer();
-
-    // [저장] 생성된 이미지를 GCS outputs 폴더에 저장
-    const filename = `outputs/${Date.now()}_${crypto.randomUUID().split('-')[0]}.jpg`;
+    // [저장] 업로드된 파일을 GCS outputs 폴더에 저장
+    const filename = `uploads/${Date.now()}_${crypto.randomUUID().split('-')[0]}.jpg`;
     const outputFile = storage.bucket(bucketName).file(filename);
     
-    await outputFile.save(outputBuffer, { contentType: 'image/jpeg', public: true });
+    // 업로드된 버퍼(req.file.buffer)를 바로 저장
+    await outputFile.save(req.file.buffer, { 
+        contentType: req.file.mimetype, 
+        public: true 
+    });
 
-    // [DB 갱신] 게시글 목록 업데이트
+    // [DB 갱신]
     const posts = await loadPosts();
     const newPost = {
       id: Date.now(),
       imageUrl: `https://storage.googleapis.com/${bucketName}/${filename}`,
-      text,
-      author,
+      text: text || '', // 텍스트가 없을 수도 있음
+      author: author || 'Unknown',
       date: new Date().toLocaleDateString()
     };
     posts.push(newPost);
