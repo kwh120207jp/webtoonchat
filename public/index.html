@@ -2,15 +2,84 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>웹툰 짤 생성기</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; }
-        h1 { color: #333; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹툰 짤 생성기 - Admin</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>웹툰 대사 생성기 블로그입니다</h1>
-    <p>이곳은 메인 페이지입니다. 아래처럼 사용하세요.</p>
-    <code>/img/이미지ID/text/할말</code>
+
+    <div class="container">
+        <!-- 헤더 영역 -->
+        <header class="blog-header">
+            <h1>Webtoon Maker Blog</h1>
+            <p>당신의 대사를 웹툰으로 만들어보세요.</p>
+        </header>
+
+        <!-- 1. 로그인 섹션 -->
+        <section id="login-section" class="card">
+            <h2>관리자 로그인</h2>
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="userid">아이디</label>
+                    <input type="text" id="userid" placeholder="admin" required>
+                </div>
+                <div class="input-group">
+                    <label for="userpw">비밀번호</label>
+                    <input type="password" id="userpw" placeholder="1234" required>
+                </div>
+                <button type="submit" class="btn-primary">로그인</button>
+            </form>
+        </section>
+
+        <!-- 2. 글쓰기(이미지 생성) 섹션 (초기엔 숨김) -->
+        <section id="write-section" class="card hidden">
+            <div class="section-header">
+                <h2>새 글 작성</h2>
+                <button id="logout-btn" class="btn-text">로그아웃</button>
+            </div>
+            
+            <div class="editor-layout">
+                <!-- 입력 폼 -->
+                <div class="form-area">
+                    <div class="input-group">
+                        <label for="image-select">장면 선택 (Image ID)</label>
+                        <!-- imageConfig.json에 등록된 ID들을 여기에 적어줍니다 -->
+                        <select id="image-select">
+                            <option value="example-scene-01">장면 1 (기본)</option>
+                            <option value="ending-cut">엔딩 컷</option>
+                            <!-- 필요하면 option을 더 추가하세요 -->
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="dialogue">대사 입력</label>
+                        <textarea id="dialogue" rows="5" placeholder="여기에 대사를 입력하세요... (줄바꿈 가능)"></textarea>
+                    </div>
+
+                    <button id="generate-btn" class="btn-primary">이미지 생성하기</button>
+                </div>
+
+                <!-- 결과 미리보기 (블로그 포스트 스타일) -->
+                <div class="preview-area">
+                    <div class="blog-post">
+                        <div class="post-meta">2025년 11월 22일 &middot; 작성자: 관리자</div>
+                        <h3 class="post-title">생성된 웹툰 짤</h3>
+                        
+                        <!-- 이미지가 로딩되면 여기에 표시됩니다 -->
+                        <div class="image-container">
+                            <img id="result-image" src="" alt="생성된 이미지가 여기에 나타납니다" style="display:none;">
+                            <div id="placeholder-text">좌측에서 내용을 입력하고 버튼을 눌러주세요.</div>
+                        </div>
+
+                        <div class="post-content">
+                            <p>위 이미지는 실시간으로 생성되었습니다. 우클릭하여 저장하세요.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
