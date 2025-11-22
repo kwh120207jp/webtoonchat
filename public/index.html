@@ -3,116 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cycorld - Post Board</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Chat Log Viewer</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <link href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css)" rel="stylesheet">
+    <style>
+        @import url('[https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap](https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap)');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        /* KakaoTalk Specific Colors */
+        .bg-kakao-bg { background-color: #b2c7da; }
+        .bg-kakao-yellow { background-color: #fee500; }
+        .text-kakao-brown { color: #3b1e1e; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message-anim {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
 </head>
-<body>
-    <div class="cyworld-bg">
-        <div class="cyworld-container">
-            <!-- 도트 배경 패턴 라인 -->
-            <div class="dot-line-outer">
-                <div class="content-wrapper">
-                    
-                    <!-- 왼쪽 컬럼 (프로필) -->
-                    <aside class="left-column">
-                        <div class="profile-box">
-                            <div class="today-count">TODAY <span class="red">28</span> | TOTAL 12345</div>
-                            <div class="profile-img-area">
-                                <div class="profile-placeholder">
-                                    (◕‿◕✿)
-                                </div>
-                            </div>
-                            <div class="profile-text">
-                                마음만은..<br>
-                                파워블로거..★<br>
-                                <br>
-                                <span class="emotion">Today is.. 평온</span>
-                            </div>
-                            <div class="history-dropdown">
-                                <select>
-                                    <option>파도타기...</option>
-                                </select>
-                            </div>
-                        </div>
-                    </aside>
+<body class="h-screen w-screen flex flex-col overflow-hidden">
 
-                    <!-- 메인 콘텐츠 (오른쪽) -->
-                    <main class="main-content">
-                        <div class="main-header">
-                            <h1 class="page-title">게시판</h1>
-                            <div class="bgm-player">Running... ♬</div>
-                        </div>
-                        
-                        <div class="scroll-area">
-                            <div class="inner-content">
-                                
-                                <!-- 1. 로그인 섹션 -->
-                                <div id="login-section" class="login-box">
-                                    <h3>관리자 로그인</h3>
-                                    <form id="login-form" class="cy-form">
-                                        <input type="text" id="userid" placeholder="ID (admin)" required>
-                                        <input type="password" id="userpw" placeholder="PW (1234)" required>
-                                        <button type="submit" class="cy-btn-primary">로그인</button>
-                                    </form>
-                                </div>
+    <!-- App Container -->
+    <div class="flex-1 flex flex-col h-full max-w-md mx-auto bg-white shadow-2xl relative">
+        
+        <!-- Header -->
+        <header class="bg-white/90 backdrop-blur-sm p-4 flex items-center justify-between border-b z-10 sticky top-0">
+            <div class="flex items-center gap-3">
+                <h1 class="font-bold text-lg text-gray-800">채팅 백업 뷰어</h1>
+                <span id="messageCount" class="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">0 messages</span>
+            </div>
+            <div class="flex gap-2">
+                 <button onclick="document.getElementById('fileInput').click()" class="text-gray-600 hover:text-black p-2 rounded-full hover:bg-gray-100 transition" title="파일 업로드">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <button onclick="openSettings()" class="text-gray-600 hover:text-black p-2 rounded-full hover:bg-gray-100 transition" title="설정">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            <input type="file" id="fileInput" accept=".json" class="hidden" onchange="handleFileUpload(event)">
+        </header>
 
-                                <!-- 2. 글쓰기 섹션 (로그인 성공 시 보임) -->
-                                <div id="write-section" class="hidden">
-                                    <div class="write-header">
-                                        <h3>새 게시글 작성</h3>
-                                        <button id="logout-btn" class="cy-btn-small">로그아웃</button>
-                                    </div>
-                                    
-                                    <div class="input-group">
-                                        <label>작성자</label>
-                                        <input type="text" id="author" class="cy-input" placeholder="닉네임">
-                                    </div>
-
-                                    <div class="input-group">
-                                        <label>사진 URL</label>
-                                        <input type="text" id="image-url" class="cy-input" placeholder="https://example.com/image.jpg">
-                                    </div>
-
-                                    <div class="input-group">
-                                        <label>내용</label>
-                                        <textarea id="post-text" class="cy-textarea" placeholder="내용을 입력하세요..."></textarea>
-                                    </div>
-
-                                    <div class="btn-group">
-                                        <button id="preview-btn" class="cy-btn-secondary">미리보기</button>
-                                        <button id="generate-btn" class="cy-btn-primary">등록</button>
-                                    </div>
-                                    
-                                    <!-- 미리보기 영역 -->
-                                    <div id="preview-area" class="hidden" style="margin-top: 15px; text-align: center;">
-                                        <div class="date-header" style="text-align:left;">Preview</div>
-                                        <img id="preview-img" src="" style="max-width: 100%; border:1px solid #ccc;" onerror="this.src='https://via.placeholder.com/400x200?text=Image+Load+Error'">
-                                    </div>
-                                </div>
-
-                                <hr class="cy-divider">
-
-                                <!-- 게시글 목록 (피드) -->
-                                <div id="feed-area" class="feed-list">
-                                    <div class="loading-msg">Firebase 연결 중...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                    
-                    <!-- 우측 탭 (장식용) -->
-                    <div class="side-tabs">
-                        <div class="side-tab active">홈</div>
-                        <div class="side-tab">프로필</div>
-                        <div class="side-tab">다이어리</div>
-                        <div class="side-tab">사진첩</div>
-                    </div>
+        <!-- Chat Area -->
+        <main id="chatContainer" class="flex-1 bg-kakao-bg overflow-y-auto p-4 flex flex-col gap-2">
+            
+            <!-- Empty State / Welcome -->
+            <div id="emptyState" class="flex flex-col items-center justify-center h-full text-center p-6 text-gray-500 space-y-4">
+                <div class="w-16 h-16 bg-yellow-400 rounded-3xl flex items-center justify-center text-white text-3xl shadow-lg mb-2">
+                    <i class="fas fa-comment"></i>
                 </div>
+                <h2 class="text-lg font-bold text-gray-700">채팅 파일을 열어주세요</h2>
+                <p class="text-sm opacity-70">JSON 형식의 백업 파일을 업로드하면<br>대화 내용이 이곳에 나타납니다.</p>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="document.getElementById('fileInput').click()" class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-black transition text-sm">
+                        파일 업로드
+                    </button>
+                    <button onclick="loadDemoData()" class="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm">
+                        예시 보기
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages will be injected here -->
+            <div id="messageList" class="flex flex-col gap-1 pb-4"></div>
+
+        </main>
+
+        <!-- Input Area (Visual Only) -->
+        <footer class="bg-white p-3 border-t flex items-center gap-2">
+            <button class="text-gray-400 p-2"><i class="fas fa-plus"></i></button>
+            <div class="flex-1 bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-400 cursor-not-allowed">
+                대화 내용은 수정할 수 없습니다
+            </div>
+            <button class="bg-yellow-400 text-kakao-brown p-2 rounded-full w-9 h-9 flex items-center justify-center shadow-sm">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+        </footer>
+
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                <h3 class="font-bold">설정</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">내 이름 (오른쪽 배치)</label>
+                    <input type="text" id="userNameInput" placeholder="예: User, 팀장" class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <p class="text-xs text-gray-400 mt-1">이 이름이나 'role: user'인 메시지는 오른쪽에 표시됩니다.</p>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 flex justify-end">
+                <button onclick="saveSettings()" class="px-4 py-2 bg-yellow-400 text-kakao-brown font-bold rounded-lg text-sm hover:bg-yellow-500">저장</button>
             </div>
         </div>
     </div>
 
-    <!-- type="module"로 설정하여 import 구문 사용 가능하게 함 -->
-    <script type="module" src="script.js"></script>
-</body>
-</html>
+    <script>
+        // State
+        let currentMessages = [];
+        let myName = localStorage.getItem('chatViewer_myName') || "";
+
+        // Elements
+        const chatContainer = document.getElementById('chatContainer');
+        const messageList = document.getElementById('messageList');
+        const emptyState = document.getElementById('emptyState');
+        const messageCountSpan = document.getElementById('messageCount');
+        const settingsModal = document.getElementById('settingsModal');
+        const userNameInput = document.getElementById('userNameInput');
+
+        // Init
+        userNameInput.value = myName;
+
+        // --- Logic ---
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    processData(json);
+                } catch (error) {
+                    alert("JSON 파일을 읽는 중 오류가 발생했습니다. 올바른 형식인지 확인해주세요.");
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function loadDemoData() {
+            // Provided sample data from the user prompt
+            const demoData = {
+              "messages": [
+                { "content": "[에리시아]: 제피르!", "role": "assistant" },
+                { "content": "아침부터 왜 그래?", "role": "assistant" },
+                { "content": "라그네아가 얼마나 성실하게 보고서 준비했는데!", "role": "assistant" },
+                { "content": "[라그네아]: ...제피르, 그거 내 거야.", "role": "assistant" },
+                { "content": "[밀리안나]: 제피르씨, 이런 식으로 장난치면 안 돼요.", "role": "assistant" },
+                { "content": "라그네아 부팀장님이 힘들어하시잖아요.", "role": "assistant" },
+                { "content": "[세리온]: ...제피르.", "role": "assistant" },
+                { "content": "서류 반납.", "role": "assistant" },
+                { "content": "지금 당장.", "role": "assistant" },
+                { "content": "[제피르]: 아~ 재미없어.", "role": "assistant" },
+                { "content": "[라그네아]: 팀장, 어젯밤 순찰 결과야.", "role": "assistant" },
+                { "content": "별 문제 없었어.\n
