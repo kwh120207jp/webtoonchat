@@ -68,7 +68,6 @@
                                         <input type="text" id="author" class="cy-input" placeholder="닉네임">
                                     </div>
 
-                                    <!-- [변경] 스타일 선택 -> 이미지 URL 입력 -->
                                     <div class="input-group">
                                         <label>사진 URL</label>
                                         <input type="text" id="image-url" class="cy-input" placeholder="https://example.com/image.jpg">
@@ -95,7 +94,7 @@
 
                                 <!-- 게시글 목록 (피드) -->
                                 <div id="feed-area" class="feed-list">
-                                    <div class="loading-msg">게시글을 불러오는 중...</div>
+                                    <div class="loading-msg">Firebase 연결 중...</div>
                                 </div>
                             </div>
                         </div>
@@ -113,6 +112,7 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- type="module"로 변경 -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>
