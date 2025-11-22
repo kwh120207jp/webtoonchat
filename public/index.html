@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cycorld - Webtoon Maker</title>
+    <title>Cycorld - Post Board</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,9 +24,9 @@
                             </div>
                             <div class="profile-text">
                                 마음만은..<br>
-                                웹툰작가..★<br>
+                                파워블로거..★<br>
                                 <br>
-                                <span class="emotion">Today is.. 짤 생성 중</span>
+                                <span class="emotion">Today is.. 평온</span>
                             </div>
                             <div class="history-dropdown">
                                 <select>
@@ -36,57 +36,58 @@
                         </div>
                     </aside>
 
-                    <!-- 오른쪽 컬럼 (콘텐츠) -->
-                    <main class="right-column">
-                        <div class="title-bar">
-                            <h1 class="home-title">★ Webtoon Maker Minihompy ★</h1>
-                            <div class="url-link">http://www.cyworld.com/webtoon</div>
+                    <!-- 메인 콘텐츠 (오른쪽) -->
+                    <main class="main-content">
+                        <div class="main-header">
+                            <h1 class="page-title">게시판</h1>
+                            <div class="bgm-player">Running... ♬</div>
                         </div>
                         
-                        <div class="main-content-box">
-                            <!-- 로그인 섹션 -->
-                            <div id="login-section" class="diary-section">
-                                <div class="date-header">Login</div>
-                                <form id="login-form" class="cy-form">
-                                    <input type="text" id="userid" placeholder="아이디" required>
-                                    <input type="password" id="userpw" placeholder="비밀번호" required>
-                                    <button type="submit" class="cy-btn">로그인</button>
-                                </form>
-                            </div>
-
-                            <!-- 글쓰기 및 피드 섹션 -->
-                            <div id="write-section" class="hidden">
-                                <!-- 탭 메뉴 -->
-                                <div class="menu-tabs">
-                                    <span class="tab active">Home</span>
-                                    <span class="tab">사진첩</span>
-                                    <span class="tab">다이어리</span>
-                                    <button id="logout-btn" class="logout-text">로그아웃</button>
+                        <div class="scroll-area">
+                            <div class="inner-content">
+                                
+                                <!-- 1. 로그인 섹션 -->
+                                <div id="login-section" class="login-box">
+                                    <h3>관리자 로그인</h3>
+                                    <form id="login-form" class="cy-form">
+                                        <input type="text" id="userid" placeholder="ID (admin)" required>
+                                        <input type="password" id="userpw" placeholder="PW (1234)" required>
+                                        <button type="submit" class="cy-btn-primary">로그인</button>
+                                    </form>
                                 </div>
 
-                                <!-- 입력 폼 -->
-                                <div class="post-write-area">
-                                    <div class="input-row">
-                                        <label>장면선택</label>
-                                        <select id="image-select" class="cy-input">
-                                            <option value="example-scene-01">장면 1 (기본)</option>
-                                            <option value="ending-cut">엔딩 컷</option>
-                                        </select>
+                                <!-- 2. 글쓰기 섹션 (로그인 성공 시 보임) -->
+                                <div id="write-section" class="hidden">
+                                    <div class="write-header">
+                                        <h3>새 게시글 작성</h3>
+                                        <button id="logout-btn" class="cy-btn-small">로그아웃</button>
                                     </div>
-                                    <div class="input-row">
-                                        <label>대사입력</label>
-                                        <textarea id="dialogue" class="cy-input" rows="3" placeholder="대사를 입력하세요..."></textarea>
+                                    
+                                    <div class="input-group">
+                                        <label>작성자</label>
+                                        <input type="text" id="author" class="cy-input" placeholder="닉네임">
                                     </div>
-                                    <div class="btn-row">
-                                        <!-- 버튼 분리: 미리보기 vs 등록 -->
-                                        <button id="preview-btn" class="cy-btn">미리보기</button>
+
+                                    <!-- [변경] 스타일 선택 -> 이미지 URL 입력 -->
+                                    <div class="input-group">
+                                        <label>사진 URL</label>
+                                        <input type="text" id="image-url" class="cy-input" placeholder="https://example.com/image.jpg">
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label>내용</label>
+                                        <textarea id="post-text" class="cy-textarea" placeholder="내용을 입력하세요..."></textarea>
+                                    </div>
+
+                                    <div class="btn-group">
+                                        <button id="preview-btn" class="cy-btn-secondary">미리보기</button>
                                         <button id="generate-btn" class="cy-btn-primary">등록</button>
                                     </div>
                                     
-                                    <!-- 미리보기 영역 (추가됨) -->
+                                    <!-- 미리보기 영역 -->
                                     <div id="preview-area" class="hidden" style="margin-top: 15px; text-align: center;">
                                         <div class="date-header" style="text-align:left;">Preview</div>
-                                        <img id="preview-img" src="" style="max-width: 100%; border:1px solid #ccc;">
+                                        <img id="preview-img" src="" style="max-width: 100%; border:1px solid #ccc;" onerror="this.src='https://via.placeholder.com/400x200?text=Image+Load+Error'">
                                     </div>
                                 </div>
 
