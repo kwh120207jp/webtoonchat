@@ -2,9 +2,9 @@ const express = require('express');
 const sharp = require('sharp');
 const { Storage } = require('@google-cloud/storage');
 const path = require('path');
-const crypto = require('crypto'); // 랜덤 파일명 생성을 위해
+const crypto = require('crypto'); 
 
-// --- [설정] 위치 좌표 설정 파일 불러오기 ---
+// --- [설정] 위치 좌표 설정 파일 ---
 let imageConfig = {};
 try {
   imageConfig = require('./imageConfig.json');
@@ -16,7 +16,6 @@ try {
 const app = express();
 const storage = new Storage();
 const bucketName = 'my-dynamic-image-source'; 
-const DATA_FILE = 'posts.json'; // 게시글 목록 관리용
 
 // 미들웨어 설정
 app.use(express.json());
@@ -25,58 +24,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 // 기본 대화창 설정
 const DEFAULT_BOX = { width: 1261, height: 220, x: 285, y: 767 };
 
-// --- [Helper] 게시글 목록 불러오기/저장하기 ---
-async function loadPosts() {
-  try {
-    const file = storage.bucket(bucketName).file(DATA_FILE);
-    const [exists] = await file.exists();
-    if (!exists) return [];
-    const [content] = await file.download();
-    return JSON.parse(content.toString());
-  } catch (error) { return []; }
-}
-
-async function savePosts(posts) {
-  const file = storage.bucket(bucketName).file(DATA_FILE);
-  await file.save(JSON.stringify(posts, null, 2), {
-    contentType: 'application/json',
-    public: true
-  });
-}
-
-// --- [API] 게시글 목록 조회 (GET) ---
-app.get('/api/posts', async (req, res) => {
-  const posts = await loadPosts();
-  res.json(posts);
-});
-
-// --- [API] 단순 게시글 등록 (POST) - 새로 추가됨 ---
-// 이미지를 생성하지 않고, URL과 텍스트만 저장합니다.
-app.post('/api/posts', async (req, res) => {
-  try {
-    const { text, author, imageUrl } = req.body;
-
-    const posts = await loadPosts();
-    const newPost = {
-      id: Date.now(),
-      imageUrl: imageUrl || 'https://via.placeholder.com/400x200?text=No+Image', // 이미지가 없으면 기본 이미지
-      text,
-      author: author || '익명',
-      date: new Date().toLocaleDateString()
-    };
-
-    posts.push(newPost);
-    await savePosts(posts);
-
-    res.json({ success: true, post: newPost });
-  } catch (error) {
-    console.error('Error saving post:', error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
+// [변경됨] GET /api/posts, POST /api/posts 라우트 제거
+// 게시판 데이터 관리는 이제 클라이언트(Firebase Firestore)에서 전적으로 담당합니다.
 
 // --- [API] 이미지 생성 및 저장 (POST) ---
-// ※ 기존 로직 유지 (요청하신 대로 건드리지 않음)
+// ※ 이 부분은 요청하신 대로 수정하지 않고 그대로 둡니다.
+// ※ 현재 프론트엔드에서는 이 API를 호출하지 않지만, 기능 보존을 위해 남겨둡니다.
 app.post('/api/generate', async (req, res) => {
   try {
     const { text, style } = req.body; 
@@ -87,15 +40,13 @@ app.post('/api/generate', async (req, res) => {
     let config = DEFAULT_BOX;
 
     if (style && imageConfig[style]) {
-       // style이 있으면 해당 설정 사용 (구현 필요 시 확장)
-       // 예: baseImage = `public/${style}.jpg`;
        config = imageConfig[style];
     }
 
-    // 2. Sharp로 이미지 합성 (텍스트 오버레이)
+    // 2. Sharp로 이미지 합성
     const imageBuffer = await sharp(baseImage).toBuffer();
     
-    // 텍스트 SVG 생성 (간단한 줄바꿈 처리 포함)
+    // 텍스트 SVG 생성
     const lineHeight = 1.2;
     const fontSize = 32; 
     const maxCharsPerLine = 20; 
@@ -116,25 +67,19 @@ app.post('/api/generate', async (req, res) => {
       .toFormat('jpeg')
       .toBuffer();
 
-    // [저장] 생성된 이미지를 GCS outputs 폴더에 저장
+    // [저장] GCS 업로드
     const filename = `outputs/${Date.now()}_${crypto.randomUUID().split('-')[0]}.jpg`;
     const outputFile = storage.bucket(bucketName).file(filename);
     
     await outputFile.save(outputBuffer, { contentType: 'image/jpeg', public: true });
 
-    // [DB 갱신] 게시글 목록 업데이트
-    const posts = await loadPosts();
-    const newPost = {
-      id: Date.now(),
-      imageUrl: `https://storage.googleapis.com/${bucketName}/${filename}`,
-      text,
-      author,
-      date: new Date().toLocaleDateString()
-    };
-    posts.push(newPost);
-    await savePosts(posts);
-
-    res.json({ success: true, post: newPost });
+    // 성공 응답
+    res.json({ 
+        success: true, 
+        imageUrl: `https://storage.googleapis.com/${bucketName}/${filename}`,
+        text, 
+        author 
+    });
 
   } catch (error) {
     console.error(error);
