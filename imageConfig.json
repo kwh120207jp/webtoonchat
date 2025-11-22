@@ -1,0 +1,14 @@
+{
+  "example-scene-01": {
+    "x": 100,
+    "y": 500,
+    "width": 800,
+    "height": 150
+  },
+  "ending-cut": {
+    "x": 500,
+    "y": 800,
+    "width": 600,
+    "height": 200
+  }
+}
