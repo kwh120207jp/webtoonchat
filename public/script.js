@@ -4,18 +4,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const feedArea = document.getElementById('feed-area');
     const loginForm = document.getElementById('login-form');
 
-    // --- 1. 로그인 (임시) ---
+    const previewBtn = document.getElementById('preview-btn');
+    const previewArea = document.getElementById('preview-area');
+    const previewImg = document.getElementById('preview-img');
+    const generateBtn = document.getElementById('generate-btn');
+
+    // --- 1. 로그인 ---
     loginForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const userid = document.getElementById('userid').value;
         const userpw = document.getElementById('userpw').value;
 
-        // 간단한 관리자 체크
         if (userid === 'admin' && userpw === '1234') {
             alert('관리자님, 환영합니다! (일촌공개)');
             loginSection.classList.add('hidden');
             writeSection.classList.remove('hidden');
-            loadPosts(); // 로그인 성공 시 게시글 목록 불러오기
+            loadPosts();
         } else {
             alert('비밀번호가 일치하지 않습니다.');
         }
@@ -27,11 +31,30 @@ document.addEventListener('DOMContentLoaded', () => {
         writeSection.classList.add('hidden');
         document.getElementById('userid').value = '';
         document.getElementById('userpw').value = '';
+        previewArea.classList.add('hidden'); // 미리보기 초기화
     });
 
-    // --- 3. 게시글 작성 및 저장 (서버로 전송) ---
-    const generateBtn = document.getElementById('generate-btn');
-    
+    // --- 3. [미리보기] 버튼 (단순 생성, 저장 안함) ---
+    // 복구하신 /img/... 경로를 사용합니다.
+    previewBtn.addEventListener('click', () => {
+        const imageId = document.getElementById('image-select').value;
+        const dialogue = document.getElementById('dialogue').value.trim();
+
+        if (!dialogue) {
+            alert('대사를 입력해주세요!');
+            return;
+        }
+
+        const encodedText = encodeURIComponent(dialogue);
+        // 저장하지 않고 이미지만 받아오는 URL
+        const imageUrl = `/img/${imageId}/text/${encodedText}?t=${Date.now()}`; // 캐시 방지용 쿼리 추가
+
+        previewImg.src = imageUrl;
+        previewArea.classList.remove('hidden');
+    });
+
+    // --- 4. [등록] 버튼 (서버에 저장) ---
+    // /api/posts 경로를 사용해 이미지를 생성하고 저장합니다.
     generateBtn.addEventListener('click', async () => {
         const imageId = document.getElementById('image-select').value;
         const dialogue = document.getElementById('dialogue').value.trim();
@@ -41,12 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // 로딩 표시
+        if (!confirm('정말 등록하시겠습니까? (사진첩에 저장됩니다)')) return;
+
         generateBtn.textContent = '저장 중...';
         generateBtn.disabled = true;
 
         try {
-            // API 호출: 이미지 생성 및 저장 요청
             const response = await fetch('/api/posts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -60,8 +83,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
 
             if (result.success) {
-                // 성공 시 입력창 초기화하고 목록 다시 불러오기
                 document.getElementById('dialogue').value = '';
+                previewArea.classList.add('hidden'); // 등록 후 미리보기 닫기
                 alert('게시글이 등록되었습니다!');
                 loadPosts();
             } else {
@@ -77,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 4. 게시글 목록 불러오기 ---
+    // --- 5. 게시글 목록 불러오기 ---
     async function loadPosts() {
         feedArea.innerHTML = '<div class="loading-msg">게시글을 불러오는 중...</div>';
         
@@ -85,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/posts');
             const posts = await response.json();
 
-            feedArea.innerHTML = ''; // 초기화
+            feedArea.innerHTML = '';
 
             if (posts.length === 0) {
                 feedArea.innerHTML = '<div class="loading-msg">아직 작성된 게시글이 없습니다.<br>첫 글을 작성해보세요!</div>';
@@ -95,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
             posts.forEach((post, index) => {
                 const postEl = document.createElement('div');
                 postEl.className = 'feed-post';
-                // 줄바꿈 처리 및 HTML 렌더링
                 const formattedText = post.text.replace(/\n/g, '<br>');
                 
                 postEl.innerHTML = `
