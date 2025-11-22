@@ -1,52 +1,67 @@
 const express = require('express');
 const sharp = require('sharp');
 const { Storage } = require('@google-cloud/storage');
+const path = require('path'); // 경로 처리를 위한 내장 모듈
 
-// [추가] 설정 파일 불러오기
-// (파일이 없거나 에러가 나도 서버가 죽지 않도록 예외처리 하거나, 빈 객체로 초기화)
+// --- [설정] 위치 좌표 설정 파일 불러오기 ---
 let imageConfig = {};
 try {
+  // 같은 폴더에 있는 imageConfig.json을 찾아서 로드합니다.
+  // 파일이 없으면 무시하고 기본값만 사용합니다.
   imageConfig = require('./imageConfig.json');
+  console.log('Loaded custom image configuration.');
 } catch (e) {
-  console.log('No custom config file found, using defaults only.');
+  console.log('No imageConfig.json found, using default settings only.');
 }
+// --------------------------------------
 
 const app = express();
 const storage = new Storage();
-const bucketName = 'my-dynamic-image-source';
+const bucketName = 'my-dynamic-image-source'; // 
 
-// [변경] 기본값(Default) 설정 정의
+// --- [설정] 기본 대화창 위치 및 크기 (Default) ---
+// imageConfig.json에 설정이 없는 이미지는 이 값을 따릅니다.
 const DEFAULT_BOX = {
-  width: 1261, // 기본 가로 크기
-  height: 220, // 기본 세로 크기
-  x: 285,      // 기본 X 좌표
-  y: 767       // 기본 Y 좌표
+  width: 1261, // 대화창 가로 크기 
+  height: 220, // 대화창 세로 크기 
+  x: 285,      // 대화창 X 좌표 (왼쪽) 
+  y: 767       // 대화창 Y 좌표 (상단) 
 };
+// ----------------------------------------------
 
+// 1. 정적 파일(블로그, 메인화면) 연결
+// 'public' 폴더를 웹 서버의 루트('/') 경로로 연결합니다.
+// 사용자가 도메인에 그냥 접속하면 public/index.html을 보여줍니다.
+app.use(express.static(path.join(__dirname, 'public')));
+
+
+// 2. 동적 이미지 생성 API
 app.get('/img/:imageId/text/:text', async (req, res) => {
   try {
     const { imageId, text } = req.params;
 
-    // [핵심 로직] 설정 파일에 해당 imageId가 있으면 가져오고, 없으면 기본값 사용
-    // 부분적인 설정(예: x만 바꿈)도 지원하기 위해 spread operator(...) 사용
+    // [위치 계산 로직]
+    // 설정 파일에 해당 imageId 설정이 있으면 덮어쓰고, 없으면 기본값 사용
     const config = imageConfig[imageId] 
       ? { ...DEFAULT_BOX, ...imageConfig[imageId] } 
       : DEFAULT_BOX;
 
-    // 1. Storage에서 원본 이미지 파일 불러오기
+    // Storage에서 원본 이미지 파일 불러오기
     const file = storage.bucket(bucketName).file(`${imageId}.jpg`);
-    const [imageBuffer] = await file.download();
+    const [imageBuffer] = await file.download(); // 
 
-    // 2. 텍스트 줄바꿈 처리
-    const lines = text.split('\n');
-    const lineHeight = 1.5; 
+    // 텍스트 줄바꿈 처리 (\n 기준)
+    const lines = text.split('\n'); // 
+    const lineHeight = 1.5; // em 단위
+    // 전체 텍스트 블록을 세로로 중앙 정렬하기 위한 오프셋 계산
     const firstLineYOffset = -((lines.length - 1) / 2) * lineHeight;
     
     const textSpans = lines.map((line, index) => 
         `<tspan x="50%" dy="${index === 0 ? firstLineYOffset : lineHeight}em">${line}</tspan>`
     ).join('');
 
-    // 3. SVG 생성 (동적 크기 적용: config.width, config.height)
+    // 텍스트 오버레이를 위한 SVG 생성
+    // config에서 가로(width), 세로(height) 값을 가져와 적용합니다.
     const svgText = `
       <svg width="${config.width}" height="${config.height}">
         <style>
@@ -63,20 +78,22 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
     `;
     const svgBuffer = Buffer.from(svgText);
 
-    // 4. Sharp로 이미지 합성 (동적 위치 적용: config.top, config.left)
+    // Sharp로 이미지 합성
+    // config에서 좌표(x, y) 값을 가져와 적용합니다.
     const outputBuffer = await sharp(imageBuffer)
       .composite([
         {
           input: svgBuffer,
-          top: config.y,  // 동적 Y 좌표
-          left: config.x, // 동적 X 좌표
+          top: config.y, 
+          left: config.x,
         },
       ])
       .toFormat('jpeg')
       .toBuffer();
 
+    // 브라우저에 결과 전송
     res.set('Content-Type', 'image/jpeg');
-    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Cache-Control', 'public, max-age=3600'); // 
     res.send(outputBuffer);
 
   } catch (error) {
@@ -85,6 +102,7 @@ app.get('/img/:imageId/text/:text', async (req, res) => {
   }
 });
 
+// Cloud Run 포트 설정
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
